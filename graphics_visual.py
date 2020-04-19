@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib
 import random
 
-# fig, ax = plt.subplots()
-# x1 = np.linspace(1,10,10)
+fig, ax = plt.subplots()
+x1 = np.linspace(1,10,10)
 x = np.arange(1, 5)
 y1 = np.exp(x)
 print(y1)
