@@ -4,10 +4,16 @@ import matplotlib.pyplot as plt
 import matplotlib
 import random
 
-fig, ax = plt.subplots()
-x1 = np.linspace(1,10,10)
-x = np.arange(1, 5)
-y1 = np.exp(x)
-print(y1)
-plt.plot(x, y1)
+lam = 9
+scale = 100
+np.random.seed(25)
+expX = np.random.exponential(lam, scale)
+
+mu = 3
+sigma = 0.25
+normX = np.random.normal(mu, sigma, scale)
+
+plt.hist(normX, 50)
+plt.show()
+plt.hist(expX, 50, color='r')
 plt.show()
