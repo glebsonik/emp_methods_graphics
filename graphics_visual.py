@@ -28,8 +28,8 @@ def makeIntervals(samples, start, delt, count):
 
 scale = 100
 lam = 0.5
-np.random.seed(25)
-expX = np.random.exponential(lam, scale)
+np.random.seed(42)
+expX = np.random.exponential(1/lam, scale)
 
 mu = 3
 sigma = 0.25
@@ -46,11 +46,11 @@ intervalCount = 3
 
 expDelta = d/intervalCount
 print("expDelta = ", expDelta)
-normIntervals = makeIntervals(expX, expX[0], expDelta, intervalCount)
+expIntervals = makeIntervals(expX, expX[0], expDelta, intervalCount)
 intTuples = []
 intElCount = []
 intAver = []
-for interval in normIntervals:
+for interval in expIntervals:
     intAver.append(interval[0])
     intElCount.append(interval[1])
     intTuples.append(interval[2])
@@ -61,20 +61,20 @@ xIntTable.add_row(intElCount)
 xIntTable.add_row(intAver)
 print(xIntTable)
 
-localEstTableNorm = PrettyTable(["Ji", "xi*", "ni", "ui", "ni*ui", "ni*ui^2", "ni(ui + 1)^2"])
-falseZero = normX[49]
+localEstTableExp = PrettyTable(["Ji", "xi*", "ni", "ui", "ni*ui", "ni*ui^2", "ni(ui + 1)^2"])
+falseZero = expX[49]
 xHash = {"niui": [],
          "niui_2": []}
-for interval in normIntervals:
+for interval in expIntervals:
     ui = (interval[0] - falseZero)/expDelta
     niui = interval[1] * ui
-    niuisqr = interval[1] * ui * ui
+    niuisqr = interval[1] * (ui * ui)
     controlCl = interval[1]*pow((ui + 1), 2)
     xHash["niui"].append(niui)
     xHash["niui_2"].append(niuisqr)
     currentRow = [interval[2], interval[0], interval[1], ui, niui, niuisqr, controlCl]
-    localEstTableNorm.add_row(currentRow)
-print(localEstTableNorm)
+    localEstTableExp.add_row(currentRow)
+print(localEstTableExp)
 
 expMoment_1 = sum(xHash["niui"])/scale
 expMoment_2 = sum(xHash["niui_2"])/scale
@@ -113,7 +113,7 @@ print(normIntTable)
 
 localEstTableNorm = PrettyTable(["xi*", "ni", "ui", "ni*ui", "ni*ui^2",
                                  "ni(ui + 1)^2", "ni*ui^3", "ni*ui^4", "ni*(ui+1)^4"])
-expFalseZero = expX[49]
+expFalseZero = normX[49]
 momentumTempHash = {"momentum_1": [],
                 "momentum_2": [],
                 "momentum_3": [],
