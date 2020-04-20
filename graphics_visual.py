@@ -86,6 +86,25 @@ estLambda = 1/averageChosen
 estLambdaSqr = 1/chosenDisp
 print("Среднее выборочное: ", averageChosen, "Лямбда (ескп. закон): ", estLambda, "Лямбда квадрат: ", estLambdaSqr)
 
+# X sqr
+x_alpha = 77.93
+x_beta = 140.17
+gamma = 1 - 0.05*2  # alpha == beta
+intLamSt = x_alpha/(2*scale*averageChosen)
+intLamEnd = x_beta/(2*scale*averageChosen)
+print("Границы доверительного интервала для лямбда: ", intLamSt, " ", intLamEnd)
+
+# Hypothesis check
+# expHypothesisTable = PrettyTable(["Ji", "ni", "n'i", "ni-n'i", "(ni-n'i)^2", "((ni-n'i)^2)/n'i"])
+# for interval in expIntervals:
+#     n_i =
+#     niui = interval[1] * ui
+#     niuisqr = interval[1] * (ui * ui)
+#     controlCl = interval[1]*pow((ui + 1), 2)
+#     xHash["niui"].append(niui)
+#     xHash["niui_2"].append(niuisqr)
+#     currentRow = [interval[2], interval[1], , ui, niui, niuisqr, controlCl]
+
 
 # Normal scatter intervals
 print("\n=========================== Нормальное распределение ===========================")
@@ -140,7 +159,7 @@ moment_2 = (sum(momentumTempHash["momentum_2"]))/scale
 moment_3 = (sum(momentumTempHash["momentum_3"]))/scale
 moment_4 = (sum(momentumTempHash["momentum_4"]))/scale
 
-expectedValEstimation = normDelta*moment_1+expFalseZero
+expectedValEstimation = normDelta*moment_1 + expFalseZero
 expectedDispEstimation = (moment_2 - pow(moment_1, 2))*pow(normDelta, 2)
 expectedDeviation = pow(expectedDispEstimation, 0.5)
 centMom_3 = (moment_3 - 3*moment_1*moment_2 + 2*pow(moment_1, 3))*pow(normDelta, 3)
@@ -149,8 +168,23 @@ centMom_4 = (moment_4 - 4*moment_1*moment_3 + pow(moment_1, 2)*6*moment_2 - 3*po
 asymmetry = centMom_3/pow(expectedDeviation, 3)
 excess = centMom_4/pow(expectedDeviation, 4) - 3
 
-print("Оценка мат ожидания: ", expectedValEstimation, "Выборочная дисперсия: ", expectedDispEstimation,
-      "Оценка отклонения: ", expectedDeviation, "Асимметрия: ", asymmetry, "Эксцесс", excess)
+print("Оценка мат ожидания(среднее выборочное): ", expectedValEstimation, "\nВыборочная дисперсия: ", expectedDispEstimation,
+      "\nОценка отклонения: ", expectedDeviation, "\nАсимметрия: ", asymmetry, "Эксцесс", excess)
+# X sqr
+t_coef = 1.66
+temp_S = 0
+for x in normX:
+    temp_S += pow((x - expectedValEstimation), 2)
+fixedChosenDisp = temp_S/(scale - 1)
+intMSt = expectedValEstimation - (pow(fixedChosenDisp/scale, 0.5))*t_coef
+intMEnd = expectedValEstimation + (pow(fixedChosenDisp/scale, 0.5))*t_coef
+
+intDeviationSt = pow((fixedChosenDisp*(scale-1))/x_beta, 0.5)
+intDeviationEnd = pow((fixedChosenDisp*(scale-1))/x_alpha, 0.5)
+
+print("Интервальная оценка для нормального m: ", intMSt, intMEnd,
+      "\nИнтервальная оценка для sigma:", intDeviationSt, intDeviationEnd)
+
 
 # Graphic section
 plt.hist(normX, 50)
