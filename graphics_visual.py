@@ -228,7 +228,7 @@ for i in zArray:
     fi = scipy.stats.norm.cdf(zi)-0.5
     fi_1 = scipy.stats.norm.cdf(zi_1)-0.5
     pi = abs(fi_1 - fi)
-    n_i = i[1]*pi
+    n_i = scale*pi
     xNorm += (pow(i[1] - n_i, 2))/n_i
     zNormHypTable.add_row([zi, zi_1, fi, fi_1, pi, n_i])
     chiNormHypTable.add_row([i[1], n_i, pow(i[1] - n_i, 2), (pow(i[1] - n_i, 2))/n_i])
