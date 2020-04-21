@@ -6,6 +6,7 @@ import matplotlib
 import random
 from prettytable import PrettyTable
 from scipy.stats import chi2
+import scipy
 
 # [start, end)
 def elementInRnage(elements, start, end):
@@ -202,6 +203,45 @@ intDeviationEnd = pow((fixedChosenDisp*(scale-1))/x_alpha, 0.5)
 print("Интервальная оценка для нормального m: ", intMSt, intMEnd,
       "\nИнтервальная оценка для sigma:", intDeviationSt, intDeviationEnd)
 
+normHypothesisTable = PrettyTable(["xi", "xi+1", "xi - x_ch", "xi+1 - x_ch",
+                                   "Zi = (xi-x_ch)/sigma", "Zi+1 = ((xi+1)-x_ch)/sigma"])
+chosenSigma = pow(expectedDispEstimation, 0.5)
+zArray = []
+for interval in normIntervals:
+    x_ch = expectedValEstimation
+    xi = interval[2][0]
+    xi_1 = interval[2][1]
+    xi_sub_xch = xi - x_ch
+    xi_1_sub_xch = xi_1 - x_ch
+    zi = xi_sub_xch/chosenSigma
+    zi_1 = xi_1_sub_xch/chosenSigma
+    zArray.append([(zi, zi_1), interval[1]])
+    normHypothesisTable.add_row([xi, xi_1, xi_sub_xch, xi_1_sub_xch, zi, zi_1])
+print(normHypothesisTable)
+
+zNormHypTable = PrettyTable(["zi", "zi+1", "Fo(zi)", "Fo(zi+1)", "Pi = Fo(zi) - Fo(zi+1)", "nPi = ni'"])
+chiNormHypTable = PrettyTable(["ni", "ni'", "(ni-ni')^2", "((ni-ni')^2)/ni'"])
+xNorm = 0
+for i in zArray:
+    zi = i[0][0]
+    zi_1 = i[0][1]
+    fi = scipy.stats.norm.cdf(zi)-0.5
+    fi_1 = scipy.stats.norm.cdf(zi_1)-0.5
+    pi = abs(fi - fi_1)
+    n_i = i[1]*pi
+    xNorm += (pow(i[1] - n_i, 2))/n_i
+    zNormHypTable.add_row([zi, zi_1, fi, fi_1, pi, n_i])
+    chiNormHypTable.add_row([i[1], n_i, pow(i[1] - n_i, 2), (pow(i[1] - n_i, 2))/n_i])
+print(zNormHypTable)
+print(chiNormHypTable)
+
+importance_level = 0.1
+x_critical = chi2.ppf(importance_level, intervalCount - 3)
+print("Хи^2 кр: ", x_critical, "Хи^2 выб: ", xNorm)
+if xNorm < x_critical:
+    print("гипотеза принята на уровне значимости альфа: ", importance_level)
+else:
+    print("Гипотеза отвержена")
 
 # Graphic section
 plt.hist(normX, 50)
