@@ -1,9 +1,11 @@
+import math as math
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
 import random
 from prettytable import PrettyTable
+from scipy.stats import chi2
 
 # [start, end)
 def elementInRnage(elements, start, end):
@@ -40,8 +42,9 @@ expX.sort()
 
 #Exponential scatter
 print("\n=========================== Экспоненциальное распределение ===========================")
+print("Лямда: ", lam)
 d = expX[-1] - expX[0]
-print("d= ", d, " (Размах)")
+print("Размах: ", d)
 intervalCount = 3
 
 expDelta = d/intervalCount
@@ -82,29 +85,40 @@ expMoment_2 = sum(xHash["niui_2"])/scale
 averageChosen = expDelta * expMoment_1 + falseZero
 chosenDisp = (expMoment_2 - pow(expMoment_1, 2))*pow(expDelta, 2)
 
+#Local points estimation
 estLambda = 1/averageChosen
 estLambdaSqr = 1/chosenDisp
 print("Среднее выборочное: ", averageChosen, "Лямбда (ескп. закон): ", estLambda, "Лямбда квадрат: ", estLambdaSqr)
 
 # X sqr
-x_alpha = 77.93
-x_beta = 140.17
-gamma = 1 - 0.05*2  # alpha == beta
+alpha_chi_coef = 0.05
+x_alpha = chi2.ppf(alpha_chi_coef, scale*2)
+x_beta = chi2.ppf(1 - alpha_chi_coef, scale*2)
+gamma = 1 - alpha_chi_coef*2  # alpha == beta
 intLamSt = x_alpha/(2*scale*averageChosen)
 intLamEnd = x_beta/(2*scale*averageChosen)
-print("Границы доверительного интервала для лямбда: ", intLamSt, " ", intLamEnd)
+print("Границы доверительного интервала для лямбда: ", intLamSt, " ", intLamEnd, "\nгамма: ", gamma)
 
 # Hypothesis check
-# expHypothesisTable = PrettyTable(["Ji", "ni", "n'i", "ni-n'i", "(ni-n'i)^2", "((ni-n'i)^2)/n'i"])
-# for interval in expIntervals:
-#     n_i =
-#     niui = interval[1] * ui
-#     niuisqr = interval[1] * (ui * ui)
-#     controlCl = interval[1]*pow((ui + 1), 2)
-#     xHash["niui"].append(niui)
-#     xHash["niui_2"].append(niuisqr)
-#     currentRow = [interval[2], interval[1], , ui, niui, niuisqr, controlCl]
-
+expHypothesisTable = PrettyTable(["Ji", "ni", "n'i", "ni-n'i", "(ni-n'i)^2", "((ni-n'i)^2)/n'i"])
+exp_x_chosen = 0
+for interval in expIntervals:
+    n_i = scale*(math.exp(-1*estLambda*interval[2][0]) - math.exp(-1*estLambda*interval[2][1]))
+    ni_sub = interval[1] - n_i
+    print("ni", interval[1], "n_i", n_i, "ni sub", ni_sub)
+    ni_sub_sqr = pow(interval[1]-n_i, 2)
+    control = ni_sub_sqr/n_i
+    currentRow = [interval[2], interval[1], n_i, ni_sub, ni_sub_sqr, control]
+    exp_x_chosen += control
+    expHypothesisTable.add_row(currentRow)
+print(expHypothesisTable)
+importance_level = 0.1
+x_critical = chi2.ppf(importance_level, intervalCount - 2)
+print("Хи^2 кр: ", x_critical, "Хи^2 выб", exp_x_chosen)
+if x_critical > exp_x_chosen:
+    print("Гипотеза принята на уровне значимости альфа:", importance_level)
+else:
+    print("Гипотеза отвержена")
 
 # Normal scatter intervals
 print("\n=========================== Нормальное распределение ===========================")
@@ -172,13 +186,16 @@ print("Оценка мат ожидания(среднее выборочное)
       "\nОценка отклонения: ", expectedDeviation, "\nАсимметрия: ", asymmetry, "Эксцесс", excess)
 # X sqr
 t_coef = 1.66
-temp_S = 0
+temp_S = 0  # temporary var for sum to get X of set (среднее выборочное)
 for x in normX:
     temp_S += pow((x - expectedValEstimation), 2)
 fixedChosenDisp = temp_S/(scale - 1)
 intMSt = expectedValEstimation - (pow(fixedChosenDisp/scale, 0.5))*t_coef
 intMEnd = expectedValEstimation + (pow(fixedChosenDisp/scale, 0.5))*t_coef
 
+alpha_chi_coef = 0.05
+x_alpha = chi2.ppf(alpha_chi_coef, scale-1)
+x_beta = chi2.ppf(1 - alpha_chi_coef, scale-1)
 intDeviationSt = pow((fixedChosenDisp*(scale-1))/x_beta, 0.5)
 intDeviationEnd = pow((fixedChosenDisp*(scale-1))/x_alpha, 0.5)
 
