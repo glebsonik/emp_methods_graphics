@@ -29,14 +29,67 @@ def makeIntervals(samples, start, delt, count):
     intervals[-1][1] += 1
     return intervals
 
+# Функция, формирующая выборку по равномерному закону
+
+def uniformSet( x0, m, shape ):
+    st = np.zeros( shape )
+    st[ 0 ] = x0
+    
+    for it in range( 1, shape ):
+        full = m * st[ it - 1 ]
+        fractional = full - int( full )
+        st[ it ] = fractional
+    
+    return st
+
+# Функция, формирующая выборку по экспоненциальному закону
+
+def exponentialSet( lamb, uniSet ):
+    st = np.zeros( uniSet.size )
+    
+    for it in range( 0, uniSet.size ):
+        expEl = - ( 1 / lamb ) * np.log( 1 - uniSet[ it ] )
+        st[ it ] = expEl
+    
+    return st
+
+# Функция, формирующая выборку по стандартному нормальному закону
+
+def normalStandartSet( uniSet ):
+    st = np.zeros( uniSet.size )
+    st[ 0 ] = uniSet[ 0 ]
+        
+    for it in range( 1, uniSet.size ):
+        normStEl = np.sqrt( - 2 * np.log( uniSet[ it - 1 ] ) ) * np.cos( 2 * np.pi * uniSet[ it ] )
+        st[ it ] = normStEl
+    
+    return st
+
+# Функция, формирующая выборку по нормальному закону с параметрами
+
+def normalParamSet( mu, sigma, normStSet ):
+    st = np.zeros( normStSet.size )
+        
+    for it in range( 0, normStSet.size ):
+        normPrEl = mu + sigma * normStSet[ it ]
+        st[ it ] = normPrEl
+    
+    return st
+
+x0 = 0.34357
+m = 43
 scale = 100
 lam = 0.5
 np.random.seed(42)
-expX = np.random.exponential(1/lam, scale)
+uniX = uniformSet( x0, m, scale )
+expX = exponentialSet( lam, uniX )
+# expX = np.random.exponential(1/lam, scale)
 
 mu = 3
 sigma = 0.25
-normX = np.random.normal(mu, sigma, scale)
+nX = normalStandartSet( uniX )
+normX = normalParamSet( mu, sigma, nX )
+# normX = np.random.normal(mu, sigma, scale)
 normX.sort()
 expX.sort()
 # print("norm: ", normX, "\n exp: ", expX)
@@ -245,6 +298,6 @@ else:
 
 # Graphic section
 plt.hist(normX, 50)
-# plt.show()
+plt.show()
 plt.hist(expX, 50, color='r')
-# plt.show()
+plt.show()
