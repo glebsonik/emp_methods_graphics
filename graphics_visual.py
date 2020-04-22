@@ -1,12 +1,12 @@
 import math as math
-import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib
-import random
+import numpy as np
 from prettytable import PrettyTable
 from scipy.stats import chi2
 import scipy
+
+def next_element(previous, mu): #функция подсчета следующего x
+    return previous * mu - int(previous * mu)
 
 # [start, end)
 def elementInRnage(elements, start, end):
@@ -30,16 +30,35 @@ def makeIntervals(samples, start, delt, count):
     return intervals
 
 scale = 100
-lam = 0.5
-np.random.seed(42)
-expX = np.random.exponential(1/lam, scale)
+# np.random.seed(42)
+# expX = np.random.exponential(1/lam, scale)
+#
+# mu = 3
+# sigma = 0.25
+# normX = np.random.normal(mu, sigma, scale)
+
+m = 2347 #простое число
+uniform_selection = [0.99]
+for element in range(1, scale):
+    uniform_selection.append(next_element(uniform_selection[element - 1], m))
+lam = 5
+expX = []
+for element in range(scale):
+    expX.append(-(1/lam)*math.log(1-uniform_selection[element]))
 
 mu = 3
 sigma = 0.25
-normX = np.random.normal(mu, sigma, scale)
+normX = [math.sqrt(-2 * math.log(uniform_selection[0])) * math.cos(2 * math.pi * uniform_selection[0])]
+for element in range(1, scale):
+    normX.append(math.sqrt(-2 * math.log(uniform_selection[element - 1])) * math.cos(2 * math.pi * uniform_selection[element]))
+for element in range(scale):
+    normX[element] = mu + sigma * normX[element]
+
+print("===================")
+print("Равномерная выборка \n", np.array(uniform_selection))
+print("===================")
 normX.sort()
 expX.sort()
-# print("norm: ", normX, "\n exp: ", expX)
 
 #Exponential scatter
 print("\n=========================== Экспоненциальное распределение ===========================")
@@ -47,9 +66,12 @@ print("Лямда: ", lam)
 d = expX[-1] - expX[0]
 print("Размах: ", d)
 intervalCount = 3
+print("========================================")
+print("Выборка экспоненциального распределения: \n", np.array(expX))
+print("========================================")
 
 expDelta = d/intervalCount
-print("expDelta = ", expDelta)
+print("Дельта (длина интервала) = ", expDelta)
 expIntervals = makeIntervals(expX, expX[0], expDelta, intervalCount)
 intTuples = []
 intElCount = []
@@ -67,6 +89,7 @@ print(xIntTable)
 
 localEstTableExp = PrettyTable(["Ji", "xi*", "ni", "ui", "ni*ui", "ni*ui^2", "ni(ui + 1)^2"])
 falseZero = expX[49]
+print("Ложный ноль: ", falseZero)
 xHash = {"niui": [],
          "niui_2": []}
 for interval in expIntervals:
@@ -106,14 +129,13 @@ exp_x_chosen = 0
 for interval in expIntervals:
     n_i = scale*(math.exp(-1*estLambda*interval[2][0]) - math.exp(-1*estLambda*interval[2][1]))
     ni_sub = interval[1] - n_i
-    print("ni", interval[1], "n_i", n_i, "ni sub", ni_sub)
     ni_sub_sqr = pow(interval[1]-n_i, 2)
     control = ni_sub_sqr/n_i
     currentRow = [interval[2], interval[1], n_i, ni_sub, ni_sub_sqr, control]
     exp_x_chosen += control
     expHypothesisTable.add_row(currentRow)
 print(expHypothesisTable)
-importance_level = 0.1
+importance_level = 1 - 0.1
 x_critical = chi2.ppf(importance_level, intervalCount - 2)
 print("Хи^2 кр: ", x_critical, "Хи^2 выб", exp_x_chosen)
 if x_critical > exp_x_chosen:
@@ -123,12 +145,16 @@ else:
 
 # Normal scatter intervals
 print("\n=========================== Нормальное распределение ===========================")
+print("Мю: ", mu, "Сигма: ", sigma)
+print("===========")
+print("Выборка нормального распределения \n", np.array(normX))
+print("===========")
 d = normX[-1] - normX[0]
-print("d= ", d, " (Размах)")
+print("Размах: ", d)
 intervalCount = 5
 
 normDelta = d/intervalCount
-print("Delta = ", normDelta)
+print("Дельта (длина интервала) = ", normDelta)
 normIntervals = makeIntervals(normX, normX[0], normDelta, intervalCount)
 
 intTuples = []
@@ -235,7 +261,7 @@ for i in zArray:
 print(zNormHypTable)
 print(chiNormHypTable)
 
-importance_level = 0.1
+importance_level = 1 - 0.1
 x_critical = chi2.ppf(importance_level, intervalCount - 3)
 print("Хи^2 кр: ", x_critical, "Хи^2 выб: ", xNorm)
 if xNorm < x_critical:
@@ -245,6 +271,6 @@ else:
 
 # Graphic section
 plt.hist(normX, 50)
-# plt.show()
+plt.show()
 plt.hist(expX, 50, color='r')
-# plt.show()
+plt.show()
